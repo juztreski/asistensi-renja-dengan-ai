@@ -22,6 +22,7 @@
         <a href="{{ url_for('index') }}">Beranda</a>
         <a href="{{ url_for('template_master') }}">Template Master</a>
         <a href="{{ url_for('index') }}#alur">Alur Kerja</a>
+        <a href="{{ url_for('admin_panel') if admin_logged_in else url_for('admin_login') }}" class="nav-admin">{{ 'Panel Admin' if admin_logged_in else 'Admin' }}</a>
       </nav>
       <div class="header-status" title="Status layanan analisis AI">
         <span class="status-dot {{ 'online' if llm.available else 'offline' }}" aria-hidden="true"></span>

@@ -14,6 +14,7 @@ import shutil
 import tempfile
 import uuid
 from datetime import datetime, timedelta, timezone
+from functools import wraps
 from pathlib import Path
 
 from flask import (
@@ -24,12 +25,14 @@ from flask import (
     render_template,
     request,
     send_file,
+    session,
     url_for,
 )
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
 import llm_analyzer
+import settings_store
 from align_check import analyze_document, recompute_after_review
 from extract_renja import document_statistics, extract_reference, extract_renja, utc_now_iso
 from generate_worksheet import (
@@ -116,6 +119,7 @@ app.config.update(
     MAX_CONTENT_LENGTH=MAX_TOTAL_UPLOAD,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
     JSON_SORT_KEYS=False,
 )
 store = JobStore(ttl_seconds=JOB_TTL_SECONDS, max_jobs=250, workdir_validator=_valid_workdir)
@@ -125,6 +129,56 @@ _cleanup_orphans()
 # ----------------------------------------------------------------------
 # Utilitas
 # ----------------------------------------------------------------------
+def _csrf_token() -> str:
+    token = session.get("_csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["_csrf_token"] = token
+    return token
+
+
+def _check_csrf() -> None:
+    expected = session.get("_csrf_token", "")
+    provided = request.form.get("csrf_token", "")
+    if not expected or not provided or not secrets.compare_digest(expected, provided):
+        abort(400)
+
+
+def _admin_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("admin_authenticated"):
+            flash("Masuk sebagai administrator untuk membuka panel pengaturan.", "info")
+            return redirect(url_for("admin_login", next=request.path))
+        return view(*args, **kwargs)
+
+    return wrapped
+
+
+def _start_admin_session() -> None:
+    session.clear()
+    session.permanent = True
+    session["admin_authenticated"] = True
+    session["_csrf_token"] = secrets.token_urlsafe(32)
+
+
+def _safe_next(target: str | None) -> str:
+    target = (target or "").strip()
+    if not target.startswith("/") or target.startswith("//") or "\\" in target:
+        return ""
+    if target.startswith("/admin/login"):
+        return ""
+    return target
+
+
+def _ai_api_key_source() -> str:
+    if settings_store.load()["gemini_api_key"]:
+        return "panel"
+    if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+        return "env"
+    return ""
+
+
 @app.template_filter("rupiah")
 def _rupiah(value):
     return format_rupiah(value)
@@ -147,6 +201,9 @@ def inject_globals():
         "app_version": "1.0.0",
         "llm": llm_analyzer.status(),
         "max_upload_mb": MAX_TOTAL_UPLOAD // (1024 * 1024),
+        "admin_logged_in": bool(session.get("admin_authenticated")),
+        "admin_configured": settings_store.is_admin_configured(),
+        "csrf_token": _csrf_token,
     }
 
 
@@ -314,25 +371,150 @@ def _get_job_or_404(job_id: str) -> dict:
     return job
 
 
-# ----------------------------------------------------------------------
-# Rute
-# ----------------------------------------------------------------------
-@app.get("/")
-def index():
+def _default_master_summary() -> dict:
     try:
-        default_master = MasterNomenklatur.load_default(DEFAULT_MASTER_PATH)
-        master_summary = default_master.summary()
+        return MasterNomenklatur.load_default(DEFAULT_MASTER_PATH).summary()
     except Exception as exc:  # pragma: no cover
         LOGGER.exception("Gagal memuat master bawaan")
-        master_summary = {
+        return {
             "meta": {"sumber": "Master gagal dimuat", "status": "ERROR", "catatan": str(exc)},
             "counts": {"program": 0, "kegiatan": 0, "subkegiatan": 0},
             "is_sample": True,
             "warnings": [str(exc)],
         }
+
+
+# ----------------------------------------------------------------------
+# Panel admin
+# ----------------------------------------------------------------------
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if session.get("admin_authenticated"):
+        return redirect(url_for("admin_panel"))
+    configured = settings_store.is_admin_configured()
+    next_url = _safe_next(request.values.get("next"))
+
+    if request.method == "POST":
+        _check_csrf()
+        password = request.form.get("password", "")
+        if not configured:
+            confirm = request.form.get("confirm", "")
+            if len(password) < settings_store.MIN_PASSWORD_LENGTH:
+                flash(f"Kata sandi minimal {settings_store.MIN_PASSWORD_LENGTH} karakter.", "error")
+            elif password != confirm:
+                flash("Konfirmasi kata sandi tidak cocok.", "error")
+            else:
+                settings_store.set_admin_password(password)
+                _start_admin_session()
+                LOGGER.info("Akun admin dibuat dari %s", request.remote_addr)
+                flash("Kata sandi admin berhasil dibuat.", "success")
+                return redirect(url_for("admin_panel"))
+        elif settings_store.verify_admin_password(password):
+            _start_admin_session()
+            LOGGER.info("Admin masuk dari %s", request.remote_addr)
+            flash("Berhasil masuk sebagai administrator.", "success")
+            return redirect(next_url or url_for("admin_panel"))
+        else:
+            LOGGER.warning("Login admin gagal dari %s", request.remote_addr)
+            flash("Kata sandi admin salah.", "error")
+    return render_template("admin_login.html", configured=configured, next_url=next_url)
+
+
+@app.get("/admin")
+@_admin_required
+def admin_panel():
+    data = settings_store.load()
+    source = _ai_api_key_source()
+    return render_template(
+        "admin.html",
+        settings=data,
+        key_masked=settings_store.mask_secret(settings_store.effective_api_key()),
+        key_source=source,
+        key_from_env=source == "env",
+        llm=llm_analyzer.status(),
+        master=_default_master_summary(),
+        jobs=store.stats(),
+        settings_path=str(settings_store.path()),
+        env_llm_disabled=os.environ.get("LLM_ENABLED", "").strip().lower() in {"0", "false", "no", "off"},
+    )
+
+
+@app.post("/admin/settings")
+@_admin_required
+def admin_settings():
+    _check_csrf()
+    form = request.form
+    model = form.get("gemini_model", "").strip()
+    if model and not re.fullmatch(r"[A-Za-z0-9._:-]{1,120}", model):
+        flash("Nama model tidak valid. Gunakan huruf, angka, titik, garis bawah, titik dua, atau tanda hubung.", "error")
+        return redirect(url_for("admin_panel"))
+
+    key_input = form.get("gemini_api_key", "").strip()
+    changes: dict[str, object] = {
+        "gemini_model": model,
+        "llm_enabled": form.get("llm_enabled") == "on",
+    }
+    cleared = form.get("clear_api_key") == "on"
+    if cleared:
+        changes["gemini_api_key"] = ""
+    elif key_input:
+        if len(key_input) > 512 or any(character.isspace() for character in key_input):
+            flash("Kunci API tidak valid: tidak boleh memuat spasi dan maksimal 512 karakter.", "error")
+            return redirect(url_for("admin_panel"))
+        changes["gemini_api_key"] = key_input
+
+    settings_store.update(**changes)
+    LOGGER.info("Pengaturan analisis AI diperbarui oleh admin")
+    flash("Kunci API dihapus. Analisis AI akan memakai variabel lingkungan bila tersedia." if cleared else "Pengaturan analisis AI disimpan.", "success")
+    return redirect(url_for("admin_panel"))
+
+
+@app.post("/admin/password")
+@_admin_required
+def admin_password():
+    _check_csrf()
+    current = request.form.get("current_password", "")
+    new = request.form.get("new_password", "")
+    confirm = request.form.get("confirm_password", "")
+    if not settings_store.verify_admin_password(current):
+        flash("Kata sandi saat ini salah.", "error")
+    elif len(new) < settings_store.MIN_PASSWORD_LENGTH:
+        flash(f"Kata sandi baru minimal {settings_store.MIN_PASSWORD_LENGTH} karakter.", "error")
+    elif new != confirm:
+        flash("Konfirmasi kata sandi baru tidak cocok.", "error")
+    else:
+        settings_store.set_admin_password(new)
+        LOGGER.info("Kata sandi admin diperbarui")
+        flash("Kata sandi admin berhasil diperbarui.", "success")
+    return redirect(url_for("admin_panel"))
+
+
+@app.post("/admin/jobs/clear")
+@_admin_required
+def admin_clear_jobs():
+    _check_csrf()
+    removed = store.clear()
+    LOGGER.info("Admin menghapus %s pekerjaan sementara", removed)
+    flash(f"{removed} pekerjaan sementara dan berkas unggahannya dihapus.", "success")
+    return redirect(url_for("admin_panel"))
+
+
+@app.post("/admin/logout")
+def admin_logout():
+    _check_csrf()
+    session.clear()
+    flash("Anda telah keluar dari panel admin.", "success")
+    return redirect(url_for("index"))
+
+
+# ----------------------------------------------------------------------
+# Rute
+# ----------------------------------------------------------------------
+@app.get("/")
+def index():
     return render_template(
         "index.html",
-        master=master_summary,
+        master=_default_master_summary(),
         today=datetime.now().date().isoformat(),
         default_tahun=datetime.now().year + 1,
     )

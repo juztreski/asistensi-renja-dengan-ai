@@ -15,6 +15,7 @@ Aplikasi web untuk membantu perencana Bappeda memeriksa Rencana Kinerja Perangka
   - duplikasi kode/nama;
   - penyelarasan tekstual dengan RKPD, Renstra, dan RPJMD.
 - Analisis AI opsional (Google Gemini) untuk melengkapi temuan rule-based.
+- Panel admin dengan login untuk mengatur kunci API Gemini, model, dan status AI, mengganti kata sandi admin, serta membersihkan data sementara.
 - Review per temuan: `Terbuka`, `Diterima`, `Dikoreksi`, `Diabaikan`, disertai catatan koreksi.
 - Skor 0–100 dihitung ulang setelah review.
 - Lembar kerja DOCX/XLSX memuat identitas, ringkasan, matriks, temuan, penyelarasan, dan kolom paraf/tanda tangan.
@@ -79,6 +80,8 @@ python scripts/build_sample_xlsx.py
 | `MAX_MASTER_MB` | `15` | Batas file master. |
 | `JOB_TTL_SECONDS` | `21600` | Masa berlaku pekerjaan (6 jam). |
 | `LOG_LEVEL` | `INFO` | Level log aplikasi. |
+| `SETTINGS_PATH` | `./instance/settings.json` | Berkas pengaturan panel admin (kata sandi hash, kunci API, model). |
+| `ADMIN_PASSWORD` | kosong | Kata sandi admin awal bila panel belum dikonfigurasi; berguna untuk deployment otomatis. |
 | `GEMINI_API_KEY` | kosong | Mengaktifkan analisis AI Google Gemini. |
 | `GOOGLE_API_KEY` | kosong | Alternatif nama env untuk kunci API Gemini. |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | Model Gemini yang digunakan. |
@@ -96,6 +99,19 @@ export GEMINI_API_KEY="kunci-dari-Google-AI-Studio"
 export GEMINI_MODEL="gemini-2.5-flash"   # opsional
 python app.py
 ```
+
+## Panel admin
+
+Buka tautan **Admin** di header atau `/admin`. Pada kunjungan pertama, panel akan meminta pembuatan kata sandi admin (minimal 8 karakter). Alternatifnya, set `ADMIN_PASSWORD` sebelum menjalankan aplikasi.
+
+Fitur panel:
+
+- Menyimpan atau menghapus kunci API Gemini serta memilih model.
+- Mengaktifkan/menonaktifkan analisis AI tanpa menghapus kunci.
+- Mengganti kata sandi admin.
+- Melihat status master, jumlah pekerjaan sementara, dan menghapus semua pekerjaan.
+
+Pengaturan disimpan di `SETTINGS_PATH` (bawaan `instance/settings.json`) dengan izin `0600`. Kunci API dari panel menimpa variabel lingkungan; `LLM_ENABLED=0` selalu memaksa AI nonaktif. Berkas ini tidak masuk repositori, tetapi tetap jangan dibagikan karena memuat kunci API.
 
 ## Format dokumen Renja
 
@@ -137,6 +153,7 @@ review_fields.py        Status, normalisasi temuan, scoring
 llm_analyzer.py         Integrasi Google Gemini opsional
 generate_worksheet.py   Generator DOCX/XLSX
 job_store.py            Penyimpanan pekerjaan sementara
+settings_store.py       Pengaturan admin (kata sandi hash, kunci API, model)
 prompts/                Prompt ekstraksi dan analisis AI
 templates/              Halaman Jinja
 static/                 CSS dan JavaScript
@@ -176,7 +193,8 @@ server {
 Catatan produksi:
 
 - Set `FLASK_SECRET_KEY` yang kuat dan gunakan HTTPS.
-- Aplikasi belum memiliki autentikasi bawaan. Tempatkan di belakang SSO/reverse proxy atau tambahkan autentikasi sebelum akses publik.
+- Hanya panel `/admin` yang dilindungi kata sandi (dengan token CSRF). Alur unggah–review–unduh tetap terbuka; batasi akses jaringan atau tambahkan SSO/reverse proxy sebelum akses publik.
+- Atur kata sandi admin lewat panel saat pertama dijalankan atau melalui `ADMIN_PASSWORD`, lalu ganti secara berkala.
 - Untuk beberapa worker/beberapa server, ganti `JobStore` in-memory dengan penyimpanan bersama (Redis/database) dan simpan berkas di object storage.
 - Pastikan direktori `uploads/` memiliki izin yang tepat dan pembersihan berkas berjalan.
 - Ganti master contoh dengan longlist resmi sebelum digunakan untuk dokumen dinas.
@@ -187,7 +205,7 @@ Catatan produksi:
 python -m pytest -q
 ```
 
-Pengujian mencakup master, ekstraksi XLSX, deteksi kesalahan contoh, perhitungan ulang skor, pembuatan DOCX/XLSX, alur unggah–review–unduh, unggahan tidak valid, dan halaman 404.
+Pengujian mencakup master, ekstraksi XLSX, deteksi kesalahan contoh, perhitungan ulang skor, pembuatan DOCX/XLSX, alur unggah–review–unduh, unggahan tidak valid, halaman 404, serta login admin, CSRF, penyimpanan pengaturan, dan pembersihan pekerjaan.
 
 ## Dasar regulasi
 

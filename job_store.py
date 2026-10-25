@@ -91,6 +91,14 @@ class JobStore:
             self._remove_workdir(job)
         return job
 
+    def clear(self) -> int:
+        with self._lock:
+            jobs = list(self._jobs.values())
+            self._jobs.clear()
+        for job in jobs:
+            self._remove_workdir(job)
+        return len(jobs)
+
     def exists(self, job_id: str) -> bool:
         with self._lock:
             self._cleanup_locked(time.time())

@@ -779,6 +779,38 @@ legend {
 .footer-inner p { font-size: 11.5px; color: var(--muted); margin: 3px 0 0; max-width: 70ch; }
 .footer-meta { display: flex; flex-direction: column; gap: 2px; text-align: right; font-size: 11px; color: var(--muted); white-space: nowrap; }
 
+/* Admin */
+.main-nav a.nav-admin { border: 1px solid rgba(255, 255, 255, 0.28); font-weight: 700; }
+.main-nav a.nav-admin:hover { border-color: rgba(255, 255, 255, 0.55); }
+.admin-shell { max-width: 470px; margin: 42px auto; }
+.admin-login-card { padding: 30px; }
+.admin-login-card h1 { font-size: 26px; margin: 4px 0 8px; }
+.admin-login-card .muted { font-size: 13px; margin-bottom: 18px; }
+.admin-form { display: grid; gap: 12px; }
+.admin-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+.admin-main, .admin-side { display: grid; gap: 18px; }
+.admin-main > .card, .admin-side > .card { padding: 20px 22px; }
+.admin-side .card h3 { margin-bottom: 10px; }
+.secret-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.secret-row:last-of-type { border-bottom: 0; }
+.secret-row strong { color: var(--navy); font-size: 12.5px; }
+.secret-row .status-dot { flex: 0 0 auto; }
+.compact-check { margin: 2px 0 4px; }
+.inline-check { background: #f8fafb; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.small-mono { font-size: 10.5px; word-break: break-all; text-align: right; }
+.admin-form .form-actions { margin-top: 4px; }
+.admin-side .inline-alert { margin-top: 10px; }
+code { background: #f2f4f7; border: 1px solid #e4e7ec; border-radius: 5px; padding: 1px 5px; font-size: 11.5px; }
+
 /* Responsive */
 @media (max-width: 1080px) {
   .hero { grid-template-columns: 1.3fr 0.9fr; }
@@ -834,6 +866,8 @@ legend {
   .toolbar { padding: 11px; }
   .bulk-group { margin-left: 0; width: 100%; }
   .bulk-group .btn { flex: 1; }
+  .admin-grid { grid-template-columns: 1fr; }
+  .admin-shell { margin: 20px auto; }
 }
 
 /* Print */

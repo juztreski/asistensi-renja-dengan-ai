@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Panel Admin{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="breadcrumb">
+    <a href="{{ url_for('index') }}">Beranda</a><span>/</span><span>Panel admin</span>
+  </div>
+  <div class="page-title-row">
+    <div>
+      <span class="eyebrow">Administrator</span>
+      <h1>Pengaturan aplikasi</h1>
+      <p class="muted">Kelola analisis AI, kata sandi admin, dan data pekerjaan sementara.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('index') }}">Kembali ke beranda</a>
+      <form method="post" action="{{ url_for('admin_logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-ghost btn-sm" type="submit">Keluar</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% if env_llm_disabled %}
+  <div class="inline-alert warn wide">
+    <strong>AI dipaksa nonaktif oleh variabel lingkungan.</strong>
+    <p><code>LLM_ENABLED=0</code> menimpa pengaturan panel. Hapus variabel tersebut lalu restart aplikasi untuk mengaktifkan AI dari panel.</p>
+  </div>
+{% endif %}
+
+<div class="admin-grid">
+  <div class="admin-main">
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <span class="eyebrow">Analisis AI</span>
+          <h2>Kunci API dan model</h2>
+        </div>
+        <span class="badge {{ 'badge-ok' if llm.available else 'badge-soft' }}">AI {{ 'aktif' if llm.available else 'nonaktif' }}</span>
+      </div>
+      {% if llm.available %}
+        <p class="field-help">Provider {{ llm.provider }} · model <code>{{ llm.model }}</code>.</p>
+      {% else %}
+        <p class="field-help">Analisis rule-based tetap berjalan. {{ llm.reason }}</p>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('admin_settings') }}" class="admin-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label class="field">
+          <span>Kunci API Gemini</span>
+          <input type="password" name="gemini_api_key" autocomplete="off" spellcheck="false"
+                 placeholder="{{ 'Tersimpan: ' ~ key_masked if key_masked else 'Belum ada kunci API' }}">
+        </label>
+        <p class="field-help">
+          {% if key_source == 'panel' %}
+            Kunci aktif berasal dari panel admin. Biarkan kosong untuk mempertahankan kunci saat ini.
+          {% elif key_source == 'env' %}
+            Kunci aktif berasal dari variabel lingkungan <code>GEMINI_API_KEY</code>/<code>GOOGLE_API_KEY</code>.
+            Isi kolom di atas untuk menimpanya dari panel.
+          {% else %}
+            Belum ada kunci API. AI hanya aktif setelah kunci diisi atau variabel lingkungan diset.
+          {% endif %}
+        </p>
+        {% if settings.gemini_api_key %}
+          <label class="checkbox compact-check">
+            <input type="checkbox" name="clear_api_key" value="on">
+            <span><strong>Hapus kunci API tersimpan</strong><small>Kunci dihapus dari berkas pengaturan.</small></span>
+          </label>
+        {% endif %}
+
+        <div class="field-grid">
+          <label class="field">
+            <span>Model Gemini</span>
+            <input type="text" name="gemini_model" value="{{ settings.gemini_model }}"
+                   placeholder="gemini-2.5-flash" autocomplete="off" spellcheck="false">
+          </label>
+          <label class="field">
+            <span>Status analisis AI</span>
+            <span class="checkbox compact-check inline-check">
+              <input type="checkbox" name="llm_enabled" value="on" {{ 'checked' if settings.llm_enabled }} {{ 'disabled' if env_llm_disabled }}>
+              <span><strong>Aktifkan analisis AI</strong><small>Dapat dimatikan tanpa menghapus kunci.</small></span>
+            </span>
+          </label>
+        </div>
+        <p class="field-help">Kosongkan nama model untuk memakai bawaan <code>gemini-2.5-flash</code>.</p>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Simpan pengaturan AI</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <span class="eyebrow">Keamanan</span>
+          <h2>Ganti kata sandi admin</h2>
+        </div>
+      </div>
+      <form method="post" action="{{ url_for('admin_password') }}" class="admin-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field-grid">
+          <label class="field">
+            <span>Kata sandi saat ini</span>
+            <input type="password" name="current_password" required autocomplete="current-password">
+          </label>
+          <label class="field">
+            <span>Kata sandi baru</span>
+            <input type="password" name="new_password" required minlength="8" autocomplete="new-password">
+          </label>
+          <label class="field">
+            <span>Ulangi kata sandi baru</span>
+            <input type="password" name="confirm_password" required minlength="8" autocomplete="new-password">
+          </label>
+        </div>
+        <p class="field-help">Minimal 8 karakter. Kata sandi disimpan sebagai hash di berkas pengaturan.</p>
+        <div class="form-actions">
+          <button class="btn btn-secondary" type="submit">Perbarui kata sandi</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <aside class="admin-side">
+    <section class="card side-card">
+      <h3>Status layanan</h3>
+      <div class="secret-row">
+        <span class="status-dot {{ 'online' if llm.available else 'offline' }}" aria-hidden="true"></span>
+        <span>AI {{ 'aktif' if llm.available else 'nonaktif' }}</span>
+      </div>
+      <p class="field-help">
+        {% if llm.available %}
+          {{ llm.provider }} · {{ llm.model }}
+        {% else %}
+          {{ llm.reason }}
+        {% endif %}
+      </p>
+      <div class="secret-row">
+        <span>Kunci API</span>
+        <strong>
+          {% if key_source == 'panel' %}Panel admin
+          {% elif key_source == 'env' %}Variabel lingkungan
+          {% else %}Belum diset{% endif %}
+        </strong>
+      </div>
+      {% if key_masked %}<p class="field-help mono">{{ key_masked }}</p>{% endif %}
+    </section>
+
+    <section class="card side-card">
+      <h3>Master nomenklatur</h3>
+      <div class="stat-list">
+        <div><span>Program</span><strong>{{ master.counts.program }}</strong></div>
+        <div><span>Kegiatan</span><strong>{{ master.counts.kegiatan }}</strong></div>
+        <div><span>Subkegiatan</span><strong>{{ master.counts.subkegiatan }}</strong></div>
+      </div>
+      {% if master.is_sample %}
+        <div class="inline-alert warn">
+          <strong>Master masih contoh.</strong>
+          <p>Ganti dengan longlist resmi sebelum dipakai untuk dokumen dinas.</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="card side-card">
+      <h3>Data sementara</h3>
+      <div class="secret-row"><span>Pekerjaan aktif</span><strong>{{ jobs.jobs }}</strong></div>
+      <div class="secret-row"><span>Batas pekerjaan</span><strong>{{ jobs.max_jobs }}</strong></div>
+      <div class="secret-row"><span>Masa berlaku</span><strong>{{ (jobs.ttl_seconds // 3600) }} jam</strong></div>
+      <form method="post" action="{{ url_for('admin_clear_jobs') }}" class="admin-form" data-confirm="Hapus semua pekerjaan sementara beserta berkas unggahannya?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-danger btn-ghost btn-block btn-sm" type="submit">Hapus semua pekerjaan</button>
+      </form>
+    </section>
+
+    <section class="card side-card">
+      <h3>Informasi sistem</h3>
+      <div class="secret-row"><span>Versi aplikasi</span><strong>{{ app_version }}</strong></div>
+      <div class="secret-row"><span>Berkas pengaturan</span><strong class="mono small-mono">{{ settings_path }}</strong></div>
+      <p class="field-help">Berkas pengaturan ditulis dengan izin 0600 dan tidak masuk repositori. Untuk produksi, set kunci API lewat variabel lingkungan.</p>
+    </section>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Buat Akun Admin' if not configured else 'Masuk Admin' }}{% endblock %}
+{% block content %}
+<section class="admin-shell">
+  <div class="card admin-login-card">
+    <span class="eyebrow">Panel Administrator</span>
+    <h1>{{ 'Buat kata sandi admin' if not configured else 'Masuk admin' }}</h1>
+    <p class="muted">
+      {% if configured %}
+        Masuk untuk mengatur kunci API Gemini, model AI, dan pemeliharaan data sementara.
+      {% else %}
+        Belum ada kata sandi admin. Buat kata sandi baru untuk mengaktifkan panel pengaturan.
+        Kata sandi disimpan sebagai hash dan tidak dapat dipulihkan otomatis.
+      {% endif %}
+    </p>
+
+    <form method="post" action="{{ url_for('admin_login') }}" class="admin-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+      <label class="field">
+        <span>{{ 'Kata sandi baru' if not configured else 'Kata sandi' }}</span>
+        <input type="password" name="password" required
+               {% if not configured %}minlength="8"{% endif %}
+               autocomplete="{{ 'new-password' if not configured else 'current-password' }}" autofocus>
+      </label>
+      {% if not configured %}
+        <label class="field">
+          <span>Ulangi kata sandi</span>
+          <input type="password" name="confirm" required minlength="8" autocomplete="new-password">
+        </label>
+        <p class="field-help">Minimal 8 karakter. Simpan di tempat aman.</p>
+      {% endif %}
+      <button class="btn btn-primary btn-block" type="submit">
+        {% if not configured %}Buat &amp; Masuk{% else %}Masuk{% endif %}
+      </button>
+    </form>
+    <p class="field-help">
+      Alternatif deployment: set variabel lingkungan <code>ADMIN_PASSWORD</code> sebelum aplikasi dijalankan.
+    </p>
+  </div>
+</section>
+{% endblock %}

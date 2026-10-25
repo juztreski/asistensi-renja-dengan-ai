@@ -15,6 +15,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+import settings_store
 from extract_renja import norm_space, parse_pagu
 from master_nomenklatur import MasterNomenklatur, code_key, normalize_code
 from review_fields import normalize_finding
@@ -53,15 +54,15 @@ PROMPT_EKSTRAKSI_USER = _load_prompt("ekstraksi_user.md", FALLBACK_EXTRACTION_US
 
 
 def _api_key() -> str:
-    return (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
+    return settings_store.effective_api_key()
 
 
 def model_name() -> str:
-    return os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    return settings_store.effective_model()
 
 
 def _disabled_by_flag() -> bool:
-    return os.environ.get("LLM_ENABLED", "").strip().lower() in {"0", "false", "no", "off"}
+    return not settings_store.effective_llm_enabled()
 
 
 def _sdk_available() -> bool:
@@ -78,7 +79,7 @@ def is_enabled() -> bool:
 
 def status() -> dict[str, Any]:
     if _disabled_by_flag():
-        reason = "Analisis AI dinonaktifkan melalui LLM_ENABLED."
+        reason = "Analisis AI dinonaktifkan melalui panel admin atau LLM_ENABLED."
     elif not _api_key():
         reason = "GEMINI_API_KEY belum diset. Analisis rule-based tetap berjalan."
     elif not _sdk_available():

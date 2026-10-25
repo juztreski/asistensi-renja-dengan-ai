@@ -5,10 +5,14 @@ from pathlib import Path
 import pytest
 
 TEST_UPLOAD_DIR = tempfile.mkdtemp(prefix="asistensi_test_")
+TEST_SETTINGS_PATH = Path(tempfile.mkdtemp(prefix="asistensi_settings_")) / "settings.json"
 os.environ["UPLOAD_DIR"] = TEST_UPLOAD_DIR
+os.environ["SETTINGS_PATH"] = str(TEST_SETTINGS_PATH)
 os.environ["FLASK_SECRET_KEY"] = "test-secret-key"
 os.environ.pop("GEMINI_API_KEY", None)
 os.environ.pop("GOOGLE_API_KEY", None)
+os.environ.pop("ADMIN_PASSWORD", None)
+os.environ.pop("LLM_ENABLED", None)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
