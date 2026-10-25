@@ -1,0 +1,228 @@
+{
+  "meta": {
+    "sumber": "SEED DEMO - bukan longlist resmi",
+    "versi": "0.1-demo",
+    "status": "CONTOH",
+    "tahun": 2026,
+    "wajib_diganti": true,
+    "catatan": "Data ini hanya contoh untuk mencoba aplikasi. Wajib diganti dengan longlist resmi Permendagri 90/2019 beserta pemutakhirannya (Kepmendagri terkait) sebelum digunakan untuk asistensi sungguhan. Gunakan menu Unggah Master atau impor data/master_template.csv."
+  },
+  "program": [
+    {
+      "kode": "1.01",
+      "nama": "PROGRAM PENUNJANG URUSAN PEMERINTAHAN DAERAH KABUPATEN/KOTA",
+      "kegiatan": [
+        {
+          "kode": "1.01.01",
+          "nama": "PERENCANAAN, PENGANGGARAN, DAN EVALUASI KINERJA PERANGKAT DAERAH",
+          "subkegiatan": [
+            {
+              "kode": "1.01.01.2.01",
+              "nama": "PENYUSUNAN DOKUMEN PERENCANAAN PERANGKAT DAERAH"
+            },
+            {
+              "kode": "1.01.01.2.02",
+              "nama": "PENYUSUNAN ANGGARAN PERANGKAT DAERAH"
+            },
+            {
+              "kode": "1.01.01.2.03",
+              "nama": "EVALUASI KINERJA PERANGKAT DAERAH"
+            }
+          ]
+        },
+        {
+          "kode": "1.01.02",
+          "nama": "ADMINISTRASI KEUANGAN PERANGKAT DAERAH",
+          "subkegiatan": [
+            {
+              "kode": "1.01.02.2.01",
+              "nama": "PENYEDIAAN GAJI DAN TUNJANGAN ASN"
+            },
+            {
+              "kode": "1.01.02.2.02",
+              "nama": "PELAKSANAAN PENATAUSAHAAN DAN PENGUJIAN/VERIFIKASI KEUANGAN SKPD"
+            },
+            {
+              "kode": "1.01.02.2.03",
+              "nama": "PENYUSUNAN LAPORAN KEUANGAN AKHIR TAHUN SKPD"
+            }
+          ]
+        },
+        {
+          "kode": "1.01.03",
+          "nama": "ADMINISTRASI UMUM PERANGKAT DAERAH",
+          "subkegiatan": [
+            {
+              "kode": "1.01.03.2.01",
+              "nama": "PENYEDIAAN KOMPONEN INSTALASI LISTRIK/PENERANGAN BANGUNAN KANTOR"
+            },
+            {
+              "kode": "1.01.03.2.02",
+              "nama": "PENYEDIAAN PERALATAN DAN PERLENGKAPAN KANTOR"
+            },
+            {
+              "kode": "1.01.03.2.03",
+              "nama": "PENYEDIAAN PERALATAN RUMAH TANGGA"
+            },
+            {
+              "kode": "1.01.03.2.04",
+              "nama": "PENYEDIAAN BAHAN LOGISTIK KANTOR"
+            },
+            {
+              "kode": "1.01.03.2.05",
+              "nama": "PENYEDIAAN BARANG CETAKAN DAN PENGGANDAAN"
+            },
+            {
+              "kode": "1.01.03.2.06",
+              "nama": "PENYEDIAAN BAHAN BACAAN DAN PERATURAN PERUNDANG-UNDANGAN"
+            },
+            {
+              "kode": "1.01.03.2.07",
+              "nama": "FASILITASI KUNJUNGAN TAMU"
+            },
+            {
+              "kode": "1.01.03.2.08",
+              "nama": "PENYELENGGARAAN RAPAT KOORDINASI DAN KONSULTASI SKPD"
+            }
+          ]
+        },
+        {
+          "kode": "1.01.04",
+          "nama": "PENGADAAN BARANG MILIK DAERAH PENUNJANG URUSAN PEMERINTAH DAERAH",
+          "subkegiatan": [
+            {
+              "kode": "1.01.04.2.01",
+              "nama": "PENGADAAN KENDARAAN PERORANGAN DINAS ATAU KENDARAAN DINAS JABATAN"
+            },
+            {
+              "kode": "1.01.04.2.02",
+              "nama": "PENGADAAN KENDARAAN DINAS OPERASIONAL ATAU LAPANGAN"
+            },
+            {
+              "kode": "1.01.04.2.03",
+              "nama": "PENGADAAN PERALATAN DAN MESIN"
+            },
+            {
+              "kode": "1.01.04.2.04",
+              "nama": "PENGADAAN MEBEL"
+            }
+          ]
+        },
+        {
+          "kode": "1.01.05",
+          "nama": "PENYEDIAAN JASA PENUNJANG URUSAN PEMERINTAHAN DAERAH",
+          "subkegiatan": [
+            {
+              "kode": "1.01.05.2.01",
+              "nama": "PENYEDIAAN JASA SURAT MENYURAT"
+            },
+            {
+              "kode": "1.01.05.2.02",
+              "nama": "PENYEDIAAN JASA KOMUNIKASI, SUMBER DAYA AIR DAN LISTRIK"
+            },
+            {
+              "kode": "1.01.05.2.03",
+              "nama": "PENYEDIAAN JASA PERALATAN DAN PERLENGKAPAN KANTOR"
+            },
+            {
+              "kode": "1.01.05.2.04",
+              "nama": "PENYEDIAAN JASA PELAYANAN UMUM KANTOR"
+            }
+          ]
+        },
+        {
+          "kode": "1.01.06",
+          "nama": "PEMELIHARAAN BARANG MILIK DAERAH PENUNJANG URUSAN PEMERINTAHAN DAERAH",
+          "subkegiatan": [
+            {
+              "kode": "1.01.06.2.01",
+              "nama": "PENYEDIAAN JASA PEMELIHARAAN, BIAYA PEMELIHARAAN, DAN PAJAK KENDARAAN PERORANGAN DINAS ATAU KENDARAAN DINAS JABATAN"
+            },
+            {
+              "kode": "1.01.06.2.02",
+              "nama": "PENYEDIAAN JASA PEMELIHARAAN, BIAYA PEMELIHARAAN, PAJAK, DAN PERIZINAN KENDARAAN DINAS OPERASIONAL ATAU LAPANGAN"
+            },
+            {
+              "kode": "1.01.06.2.03",
+              "nama": "PEMELIHARAAN PERALATAN DAN MESIN"
+            },
+            {
+              "kode": "1.01.06.2.04",
+              "nama": "PEMELIHARAAN MEBEL"
+            },
+            {
+              "kode": "1.01.06.2.05",
+              "nama": "PEMELIHARAAN/REHABILITASI GEDUNG KANTOR"
+            },
+            {
+              "kode": "1.01.06.2.06",
+              "nama": "PEMELIHARAAN/REHABILITASI SARANA DAN PRASARANA GEDUNG KANTOR ATAU BANGUNAN LAINNYA"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kode": "6.01",
+      "nama": "PROGRAM PERENCANAAN, PENGENDALIAN DAN EVALUASI PEMBANGUNAN DAERAH",
+      "kegiatan": [
+        {
+          "kode": "6.01.01",
+          "nama": "PERENCANAAN, PENGENDALIAN DAN EVALUASI PEMBANGUNAN DAERAH",
+          "subkegiatan": [
+            {
+              "kode": "6.01.01.2.01",
+              "nama": "PENYUSUNAN DOKUMEN PERENCANAAN PEMBANGUNAN DAERAH"
+            },
+            {
+              "kode": "6.01.01.2.02",
+              "nama": "KOORDINASI PERENCANAAN PEMBANGUNAN DAERAH"
+            },
+            {
+              "kode": "6.01.01.2.03",
+              "nama": "EVALUASI KINERJA PERENCANAAN PEMBANGUNAN DAERAH"
+            }
+          ]
+        },
+        {
+          "kode": "6.01.02",
+          "nama": "KOORDINASI DAN SINKRONISASI PERENCANAAN PEMBANGUNAN DAERAH",
+          "subkegiatan": [
+            {
+              "kode": "6.01.02.2.01",
+              "nama": "KOORDINASI PENYUSUNAN DOKUMEN PERENCANAAN PEMBANGUNAN DAERAH"
+            },
+            {
+              "kode": "6.01.02.2.02",
+              "nama": "SINKRONISASI PERENCANAAN PEMBANGUNAN DAERAH"
+            },
+            {
+              "kode": "6.01.02.2.03",
+              "nama": "MONITORING, EVALUASI, DAN PELAPORAN PERENCANAAN PEMBANGUNAN DAERAH"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kode": "6.02",
+      "nama": "PROGRAM PENELITIAN DAN PENGEMBANGAN DAERAH",
+      "kegiatan": [
+        {
+          "kode": "6.02.01",
+          "nama": "PENELITIAN DAN PENGEMBANGAN DAERAH",
+          "subkegiatan": [
+            {
+              "kode": "6.02.01.2.01",
+              "nama": "PENELITIAN DAN PENGEMBANGAN BIDANG PENYELENGGARAAN PEMERINTAHAN DAN PEMBANGUNAN DAERAH"
+            },
+            {
+              "kode": "6.02.01.2.02",
+              "nama": "FASILITASI PENELITIAN DAN PENGEMBANGAN DAERAH"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

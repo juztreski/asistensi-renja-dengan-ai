@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="error-card card">
+  <span class="error-code">{{ code }}</span>
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="{{ url_for('index') }}">Kembali ke beranda</a>
+  </div>
+</section>
+{% endblock %}

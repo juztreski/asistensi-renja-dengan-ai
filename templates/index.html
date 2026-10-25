@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}Asistensi Renja OPD{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow">Bappeda Kabupaten Soppeng</span>
+    <h1>Asistensi Rencana Kinerja Perangkat Daerah</h1>
+    <p class="lead">
+      Unggah Renja OPD, periksa nomenklatur Program–Kegiatan–Subkegiatan terhadap master
+      Permendagri 90/2019, selaraskan dengan RKPD/Renstra/RPJMD, lalu hasilkan Lembar Kerja
+      Asistensi yang siap ditandatangani.
+    </p>
+    <div class="pill-row">
+      <span class="pill">Permendagri 86/2017</span>
+      <span class="pill">Permendagri 90/2019</span>
+      <span class="pill">RPJMD · Renstra · RKPD</span>
+    </div>
+  </div>
+  <div class="hero-panel" aria-label="Ringkasan langkah">
+    <div class="hero-score">
+      <span class="score-label">Keluaran</span>
+      <strong>DOCX &amp; XLSX</strong>
+      <small>Lembar kerja asistensi lengkap dengan matriks, temuan, rekomendasi, dan kolom paraf.</small>
+    </div>
+    <ol class="mini-steps">
+      <li><span>1</span> Unggah dokumen</li>
+      <li><span>2</span> Ekstraksi &amp; analisis</li>
+      <li><span>3</span> Review temuan</li>
+      <li><span>4</span> Unduh lembar kerja</li>
+    </ol>
+  </div>
+</section>
+
+<section id="alur" class="steps card">
+  <div class="step">
+    <span class="step-num">01</span>
+    <div><strong>Unggah</strong><p>Renja OPD wajib; RPJMD, Renstra, dan RKPD bersifat opsional untuk penyelarasan.</p></div>
+  </div>
+  <div class="step">
+    <span class="step-num">02</span>
+    <div><strong>Analisis</strong><p>Rule-based memeriksa kode, nomenklatur, hierarki, indikator, pagu, dan duplikasi. AI opsional menambah temuan.</p></div>
+  </div>
+  <div class="step">
+    <span class="step-num">03</span>
+    <div><strong>Review</strong><p>Terima, koreksi, atau abaikan setiap temuan. Skor dihitung ulang sesuai keputusan perencana.</p></div>
+  </div>
+  <div class="step">
+    <span class="step-num">04</span>
+    <div><strong>Lembar Kerja</strong><p>Hasil siap diunduh dalam DOCX dan XLSX, memuat identitas, matriks, temuan, dan paraf.</p></div>
+  </div>
+</section>
+
+<div class="layout-main">
+  <section class="card form-card">
+    <div class="card-head">
+      <div>
+        <span class="eyebrow">Formulir analisis</span>
+        <h2>Mulai asistensi baru</h2>
+      </div>
+      <span class="muted">Maks. total {{ max_upload_mb }} MB</span>
+    </div>
+
+    <form method="post" action="{{ url_for('analyze') }}" enctype="multipart/form-data" id="analyze-form">
+      <fieldset class="form-section">
+        <legend><span class="legend-num">1</span> Dokumen Renja OPD <span class="required">wajib</span></legend>
+        <label class="dropzone" for="renja">
+          <input type="file" id="renja" name="renja" accept=".pdf,.docx,.xlsx,.csv" required data-file-input>
+          <span class="dropzone-icon" aria-hidden="true">DOC</span>
+          <span class="dropzone-title">Pilih atau seret dokumen Renja</span>
+          <span class="dropzone-hint">PDF, DOCX, XLSX, atau CSV — utamakan XLSX/DOCX agar tabel terbaca akurat</span>
+          <span class="file-name" data-file-name>Belum ada file dipilih</span>
+        </label>
+      </fieldset>
+
+      <fieldset class="form-section">
+        <legend><span class="legend-num">2</span> Dokumen acuan <span class="optional">opsional</span></legend>
+        <p class="field-help">Digunakan untuk memeriksa penyelarasan program dan subkegiatan. Cuplikan dokumen juga cukup.</p>
+        <div class="upload-grid">
+          <label class="dropzone compact" for="rpjmd">
+            <input type="file" id="rpjmd" name="rpjmd" accept=".pdf,.docx,.xlsx,.csv,.txt,.md" data-file-input>
+            <span class="dropzone-title">RPJMD</span>
+            <span class="dropzone-hint">PDF/DOCX/XLSX/TXT</span>
+            <span class="file-name" data-file-name>Belum ada file</span>
+          </label>
+          <label class="dropzone compact" for="renstra">
+            <input type="file" id="renstra" name="renstra" accept=".pdf,.docx,.xlsx,.csv,.txt,.md" data-file-input>
+            <span class="dropzone-title">Renstra OPD</span>
+            <span class="dropzone-hint">PDF/DOCX/XLSX/TXT</span>
+            <span class="file-name" data-file-name>Belum ada file</span>
+          </label>
+          <label class="dropzone compact" for="rkpd">
+            <input type="file" id="rkpd" name="rkpd" accept=".pdf,.docx,.xlsx,.csv,.txt,.md" data-file-input>
+            <span class="dropzone-title">RKPD</span>
+            <span class="dropzone-hint">PDF/DOCX/XLSX/TXT</span>
+            <span class="file-name" data-file-name>Belum ada file</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="form-section">
+        <legend><span class="legend-num">3</span> Master nomenklatur <span class="optional">opsional</span></legend>
+        <div class="master-inline">
+          <div>
+            <div class="master-title">
+              <span class="badge {{ 'badge-warn' if master.is_sample else 'badge-ok' }}">
+                {{ 'CONTOH' if master.is_sample else 'MASTER AKTIF' }}
+              </span>
+              <strong>{{ master.meta.sumber or 'Master bawaan' }}</strong>
+            </div>
+            <p class="field-help">
+              {{ master.counts.program }} program · {{ master.counts.kegiatan }} kegiatan · {{ master.counts.subkegiatan }} subkegiatan.
+              {% if master.is_sample %}
+                Master bawaan masih contoh. Unggah longlist resmi untuk hasil yang valid.
+              {% endif %}
+            </p>
+          </div>
+          <div class="master-actions">
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('template_master') }}">Unduh template CSV</a>
+          </div>
+        </div>
+        <label class="file-row" for="master">
+          <input type="file" id="master" name="master" accept=".json,.csv" data-file-input>
+          <span>Ganti master (JSON/CSV)</span>
+          <span class="file-name" data-file-name>Belum ada file</span>
+        </label>
+      </fieldset>
+
+      <fieldset class="form-section">
+        <legend><span class="legend-num">4</span> Identitas asistensi</legend>
+        <div class="field-grid">
+          <label class="field">
+            <span>Nama OPD</span>
+            <input type="text" name="opd" placeholder="Contoh: Badan Perencanaan Pembangunan Daerah Kabupaten Soppeng">
+          </label>
+          <label class="field">
+            <span>Tahun Anggaran</span>
+            <input type="text" name="tahun" inputmode="numeric" maxlength="4" pattern="20[0-9]{2}" value="{{ default_tahun }}" placeholder="{{ default_tahun }}">
+          </label>
+          <label class="field">
+            <span>Nomor Lembar Kerja</span>
+            <input type="text" name="nomor" placeholder="................................">
+          </label>
+          <label class="field">
+            <span>Tanggal Asistensi</span>
+            <input type="date" name="tanggal" value="{{ today }}">
+          </label>
+        </div>
+
+        <details class="details">
+          <summary>Lengkapi pejabat penanda tangan dan catatan OPD</summary>
+          <div class="field-grid">
+            <label class="field"><span>Perencana Ahli Pertama</span><input type="text" name="perencana" placeholder="Nama lengkap"></label>
+            <label class="field"><span>NIP Perencana</span><input type="text" name="nip_perencana" placeholder="NIP"></label>
+            <label class="field"><span>Koordinator Bidang</span><input type="text" name="koordinator" placeholder="Nama lengkap"></label>
+            <label class="field"><span>NIP Koordinator</span><input type="text" name="nip_koordinator" placeholder="NIP"></label>
+            <label class="field"><span>Kepala Bappeda</span><input type="text" name="kepala" placeholder="Nama lengkap"></label>
+            <label class="field"><span>NIP Kepala</span><input type="text" name="nip_kepala" placeholder="NIP"></label>
+            <label class="field field-full"><span>Catatan awal untuk OPD</span><textarea name="catatan" rows="2" placeholder="Catatan atau arahan asistensi"></textarea></label>
+          </div>
+        </details>
+      </fieldset>
+
+      <div class="ai-box">
+        <label class="checkbox">
+          <input type="checkbox" name="use_llm" value="on" {{ 'checked' if llm.available else 'disabled' }}>
+          <span>
+            <strong>Gunakan analisis AI sebagai pelengkap</strong>
+            <small>
+              {% if llm.available %}
+                {{ llm.provider }} ({{ llm.model }}). Hasil AI digabung dengan pemeriksaan rule-based dan tetap harus direview.
+              {% else %}
+                AI belum aktif. {{ llm.reason }}
+              {% endif %}
+            </small>
+          </span>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary btn-lg" type="submit" data-submit-button>
+          <span class="btn-label">Analisis Dokumen</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
+        <p class="form-note">Dokumen diproses di server dan disimpan sementara dengan ID pekerjaan acak.</p>
+      </div>
+    </form>
+  </section>
+
+  <aside class="sidebar">
+    <section class="card side-card">
+      <h3>Status master</h3>
+      <div class="stat-list">
+        <div><span>Program</span><strong>{{ master.counts.program }}</strong></div>
+        <div><span>Kegiatan</span><strong>{{ master.counts.kegiatan }}</strong></div>
+        <div><span>Subkegiatan</span><strong>{{ master.counts.subkegiatan }}</strong></div>
+      </div>
+      {% if master.is_sample %}
+        <div class="inline-alert warn">
+          <strong>Master masih contoh.</strong>
+          <p>Ganti dengan longlist resmi Permendagri 90/2019 dan Kepmendagri pemutakhirannya. Hasil analisis saat ini tidak untuk dokumen resmi.</p>
+        </div>
+      {% else %}
+        <div class="inline-alert ok">
+          <strong>Master terunggah.</strong>
+          <p>{{ master.meta.catatan or 'Master nomenklatur siap digunakan.' }}</p>
+        </div>
+      {% endif %}
+      <a class="btn btn-ghost btn-sm btn-block" href="{{ url_for('template_master') }}">Unduh template master</a>
+    </section>
+
+    <section class="card side-card">
+      <h3>Contoh untuk mencoba</h3>
+      <ul class="link-list">
+        <li><a href="{{ url_for('sample_file', name='renja.csv') }}">Renja Bappeda (CSV)</a><span>Memuat kesalahan yang disengaja</span></li>
+        <li><a href="{{ url_for('sample_file', name='renja.xlsx') }}">Renja Bappeda (XLSX)</a><span>Format tabel lebih mudah dibaca</span></li>
+        <li><a href="{{ url_for('sample_file', name='rkpd.txt') }}">Cuplikan RKPD 2027</a><span>Dokumen acuan</span></li>
+        <li><a href="{{ url_for('sample_file', name='renstra.txt') }}">Cuplikan Renstra Bappeda</a><span>Dokumen acuan</span></li>
+      </ul>
+    </section>
+
+    <section class="card side-card">
+      <h3>Prinsip asistensi</h3>
+      <ul class="check-list">
+        <li>Nomenklatur harus sama dengan longlist resmi.</li>
+        <li>Hierarki kode konsisten: program, kegiatan, subkegiatan.</li>
+        <li>Indikator SMART, target dan satuan terukur.</li>
+        <li>Target selaras dengan RKPD, Renstra, dan RPJMD.</li>
+        <li>Pagu indikatif terisi dan konsisten.</li>
+      </ul>
+    </section>
+
+    <section class="card side-card muted-card">
+      <h3>Catatan privasi</h3>
+      <p>Dokumen hanya disimpan sementara di server untuk keperluan analisis. Data pekerjaan dihapus otomatis setelah masa berlaku berakhir atau dapat dihapus manual dari halaman hasil.</p>
+    </section>
+  </aside>
+</div>
+{% endblock %}

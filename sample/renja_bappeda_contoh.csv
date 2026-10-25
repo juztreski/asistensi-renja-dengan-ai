@@ -1,0 +1,17 @@
+kode,nama,indikator,target,satuan,pagu,lokasi,keterangan
+1.01,Program Penunjang Urusan Pemerintahan Daerah Kabupaten/Kota,Persentase layanan administrasi perkantoran yang terpenuhi,100,Persen,,Kabupaten Soppeng,
+1.01.01,"Perencanaan, Penganggaran, dan Evaluasi Kinerja Perangkat Daerah",Jumlah dokumen perencanaan dan laporan kinerja yang tersusun,5,Dokumen,,Kabupaten Soppeng,
+1.01.01.2.01,Penyusunan Dokumen Perencanaan Perangkat Daerah,Jumlah dokumen perencanaan perangkat daerah,1,Dokumen,15000000,Kabupaten Soppeng,Dokumen Renja dan RKA
+1.01.01.2.02,Penyusunan Anggaran Perangkat Daerah,Jumlah dokumen anggaran perangkat daerah,1,Dokumen,10000000,Kabupaten Soppeng,
+1.01.01.2.03,Evaluasi Kinerja Perangkat Daerah,Jumlah laporan evaluasi kinerja perangkat daerah,4,Laporan,,Kabupaten Soppeng,Pagu belum diisi
+1.01.03,Administrasi Umum Perangkat Daerah,Persentase kebutuhan administrasi umum yang terpenuhi,100,Persen,,Kabupaten Soppeng,
+1.01.03.2.02,Penyediaan Alat Tulis Kantor,Jumlah paket alat tulis kantor yang tersedia,1,Paket,5000000,Kabupaten Soppeng,Nama tidak sesuai master
+1.01.03.2.04,Penyediaan Bahan Logistik Kantor,Jumlah bulan penyediaan bahan logistik,12,Bulan,12000000,Kabupaten Soppeng,
+1.01.03.2.09,Penyediaan Jasa Kebersihan Kantor,Jumlah bulan layanan kebersihan kantor,12,Bulan,8000000,Kabupaten Soppeng,Kode tidak ada di master
+6.01,"Program Perencanaan, Pengendalian dan Evaluasi Pembangunan Daerah",Persentase dokumen perencanaan daerah yang tersusun tepat waktu,100,Persen,,Kabupaten Soppeng,
+6.01.01,Perencanaan Pengendalian dan Evaluasi Pembangunan Daerah,Jumlah dokumen perencanaan dan evaluasi pembangunan daerah,6,Dokumen,,Kabupaten Soppeng,
+6.01.01.2.01,Penyusunan Dokumen Perencanaan Pembangunan Daerah,Jumlah dokumen perencanaan pembangunan daerah,1,Dokumen,50000000,Kabupaten Soppeng,
+6.01.01.2.02,Koordinasi Perencanaan Pembangunan Daerah,,4,Kali,25000000,Kabupaten Soppeng,Indikator belum diisi
+6.01.02,Koordinasi dan Sinkronisasi Perencanaan Pembangunan Daerah,Jumlah kegiatan koordinasi perencanaan yang terlaksana,12,Kali,,Kabupaten Soppeng,
+6.01.02.2.01,Koordinasi Penyusunan Dokumen Perencanaan Pembangunan Daerah,Jumlah koordinasi penyusunan dokumen perencanaan,5,,15000000,Kabupaten Soppeng,Satuan belum diisi
+6.01.02.2.02,Sinkronisasi Perencanaan Pembangunan Daerah,Jumlah sinkronisasi perencanaan pembangunan,TBD,,0,Kabupaten Soppeng,Target belum jelas dan pagu nol

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Review Temuan — {{ identity.opd or 'Renja OPD' }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="breadcrumb">
+    <a href="{{ url_for('index') }}">Beranda</a><span>/</span><span>Review temuan</span>
+  </div>
+  <div class="page-title-row">
+    <div>
+      <span class="eyebrow">Langkah 3 dari 4</span>
+      <h1>Review temuan asistensi</h1>
+      <p class="muted">{{ identity.opd or 'OPD belum teridentifikasi' }} · Tahun {{ identity.tahun or '—' }} · {{ job.files.renja.filename if job.files and job.files.renja else '' }}</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('index') }}">Analisis baru</a>
+      <form method="post" action="{{ url_for('delete_job', job_id=job.id) }}" data-confirm="Hapus seluruh data pekerjaan ini?">
+        <button class="btn btn-danger btn-sm" type="submit">Hapus pekerjaan</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% if warnings %}
+  <details class="card notice-card" {% if analysis.master and analysis.master.is_sample %}open{% endif %}>
+    <summary><strong>Catatan sistem dan peringatan ({{ warnings|length }})</strong></summary>
+    <ul class="notice-list">
+      {% for warning in warnings %}
+        <li>{{ warning }}</li>
+      {% endfor %}
+    </ul>
+  </details>
+{% endif %}
+
+<section class="score-grid">
+  <div class="card score-card">
+    <span class="score-label">Skor awal</span>
+    <div class="score-value">{{ score_initial.score if score_initial.score is defined else '—' }}<small>/100</small></div>
+    <span class="score-predikat">{{ score_initial.predikat or '—' }}</span>
+    <p>Sebelum status temuan ditinjau.</p>
+  </div>
+  <div class="card score-card accent">
+    <span class="score-label">Skor setelah review</span>
+    <div class="score-value">{{ score_final.score if score_final.score is defined else '—' }}<small>/100</small></div>
+    <span class="score-predikat">{{ score_final.predikat or '—' }}</span>
+    <p>Skor dihitung ulang sesuai keputusan Anda.</p>
+  </div>
+  <div class="card count-card">
+    <span class="score-label">Temuan aktif</span>
+    <div class="count-row">
+      <span class="severity-chip kritis">Kritis <b>{{ summary.by_severity.Kritis }}</b></span>
+      <span class="severity-chip sedang">Sedang <b>{{ summary.by_severity.Sedang }}</b></span>
+      <span class="severity-chip saran">Saran <b>{{ summary.by_severity.Saran }}</b></span>
+    </div>
+    <p>{{ summary.active }} temuan masih dihitung dalam skor; {{ summary.resolved }} diabaikan/dikoreksi.</p>
+  </div>
+</section>
+
+<form method="post" action="{{ url_for('review_post', job_id=job.id) }}" id="review-form">
+  <details class="card identity-card">
+    <summary><strong>Identitas dan pejabat penanda tangan</strong><span class="muted">Klik untuk mengubah</span></summary>
+    <div class="field-grid">
+      <label class="field"><span>Nama OPD</span><input type="text" name="opd" value="{{ identity.opd or '' }}"></label>
+      <label class="field"><span>Tahun Anggaran</span><input type="text" name="tahun" maxlength="4" value="{{ identity.tahun or '' }}"></label>
+      <label class="field"><span>Nomor Lembar Kerja</span><input type="text" name="nomor" value="{{ identity.nomor or '' }}"></label>
+      <label class="field"><span>Tanggal Asistensi</span><input type="date" name="tanggal" value="{{ identity.tanggal or '' }}"></label>
+      <label class="field"><span>Perencana Ahli Pertama</span><input type="text" name="perencana" value="{{ identity.perencana or '' }}"></label>
+      <label class="field"><span>NIP Perencana</span><input type="text" name="nip_perencana" value="{{ identity.nip_perencana or '' }}"></label>
+      <label class="field"><span>Koordinator Bidang</span><input type="text" name="koordinator" value="{{ identity.koordinator or '' }}"></label>
+      <label class="field"><span>NIP Koordinator</span><input type="text" name="nip_koordinator" value="{{ identity.nip_koordinator or '' }}"></label>
+      <label class="field"><span>Kepala Bappeda</span><input type="text" name="kepala" value="{{ identity.kepala or '' }}"></label>
+      <label class="field"><span>NIP Kepala</span><input type="text" name="nip_kepala" value="{{ identity.nip_kepala or '' }}"></label>
+      <label class="field field-full"><span>Catatan / tanggapan OPD</span><textarea name="catatan" rows="3">{{ identity.catatan or '' }}</textarea></label>
+    </div>
+  </details>
+
+  <div class="toolbar card">
+    <div class="filter-group">
+      <span class="filter-label">Filter tingkat</span>
+      <button class="filter-chip active" type="button" data-filter-group="severity" data-filter-value="all">Semua</button>
+      <button class="filter-chip" type="button" data-filter-group="severity" data-filter-value="Kritis">Kritis</button>
+      <button class="filter-chip" type="button" data-filter-group="severity" data-filter-value="Sedang">Sedang</button>
+      <button class="filter-chip" type="button" data-filter-group="severity" data-filter-value="Saran">Saran</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Filter status</span>
+      <button class="filter-chip active" type="button" data-filter-group="status" data-filter-value="all">Semua</button>
+      {% for option in STATUS_OPTIONS %}
+        <button class="filter-chip" type="button" data-filter-group="status" data-filter-value="{{ option.value }}">{{ option.label }}</button>
+      {% endfor %}
+    </div>
+    <div class="bulk-group">
+      <button class="btn btn-ghost btn-sm" type="submit" name="bulk" value="Diterima" formnovalidate>Terima semua</button>
+      <button class="btn btn-ghost btn-sm" type="submit" name="bulk" value="Diabaikan" formnovalidate>Abaikan semua</button>
+      <button class="btn btn-ghost btn-sm" type="submit" name="bulk" value="Terbuka" formnovalidate>Reset status</button>
+    </div>
+  </div>
+
+  <div class="findings-head">
+    <h2>Daftar temuan <span class="count-badge" data-visible-count>{{ findings|length }}</span></h2>
+    <p class="muted">Temuan diurutkan dari tingkat paling material. Beri catatan koreksi bila diperlukan.</p>
+  </div>
+
+  <div class="finding-list" data-finding-list>
+    {% for finding in findings %}
+      <article class="finding-card {{ finding.tingkat|lower }}" data-severity="{{ finding.tingkat }}" data-status="{{ finding.status }}">
+        <div class="finding-head">
+          <div class="finding-title">
+            <span class="badge badge-{{ finding.tingkat|lower }}">{{ finding.tingkat }}</span>
+            <span class="badge badge-soft">{{ finding.kategori }}</span>
+            <span class="badge badge-soft">{{ finding.level }}</span>
+            {% if finding.sumber == 'llm' %}<span class="badge badge-ai">AI</span>{% endif %}
+            <strong>{{ finding.kode or 'Tanpa kode' }}{% if finding.nama %} — {{ finding.nama }}{% endif %}</strong>
+          </div>
+          <label class="status-select">
+            <span>Status</span>
+            <select name="status_{{ finding.id }}" aria-label="Status temuan {{ finding.id }}">
+              {% for option in STATUS_OPTIONS %}
+                <option value="{{ option.value }}" {{ 'selected' if finding.status == option.value else '' }}>{{ option.label }} — {{ option.hint }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <div class="finding-body">
+          <div class="finding-main">
+            <p class="finding-message">{{ finding.pesan }}</p>
+            <div class="recommendation">
+              <span class="label">Rekomendasi</span>
+              <p>{{ finding.rekomendasi }}</p>
+            </div>
+            <div class="finding-meta">
+              <span><b>Acuan:</b> {{ finding.acuan }}</span>
+              {% if finding.path %}<span><b>Jalur:</b> {{ finding.path }}</span>{% endif %}
+            </div>
+          </div>
+          <label class="finding-note">
+            <span>Catatan koreksi</span>
+            <textarea name="catatan_{{ finding.id }}" rows="3" placeholder="Catatan perbaikan, nomor halaman, atau kesepakatan dengan OPD">{{ finding.catatan or '' }}</textarea>
+          </label>
+        </div>
+      </article>
+    {% else %}
+      <div class="empty-state card">
+        <span class="empty-mark" aria-hidden="true">OK</span>
+        <h3>Tidak ada temuan material</h3>
+        <p>Dokumen tidak menghasilkan temuan pada pemeriksaan ini. Tetap verifikasi manual sebelum menetapkan lembar kerja.</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if alignment %}
+    <section class="card section-card">
+      <div class="card-head">
+        <div><span class="eyebrow">Penyelarasan</span><h2>Hasil pemeriksaan dokumen acuan</h2></div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Dokumen acuan</th><th>Status</th><th>Diperiksa</th><th>Selaras</th><th>Belum</th><th>Catatan</th></tr>
+          </thead>
+          <tbody>
+            {% for item in alignment %}
+              <tr>
+                <td><strong>{{ item.acuan }}</strong><br><small>{{ item.nama_file }}</small></td>
+                <td><span class="badge {{ 'badge-ok' if item.status == 'Selaras' else 'badge-warn' if item.status in ['Selaras Sebagian', 'Belum Selaras'] else 'badge-soft' }}">{{ item.status }}</span></td>
+                <td class="num">{{ item.jumlah_diperiksa }}</td>
+                <td class="num">{{ item.jumlah_selaras }}</td>
+                <td class="num">{{ item.jumlah_belum }}</td>
+                <td>{{ item.catatan }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+  <div class="sticky-actions">
+    <div class="sticky-note">
+      <strong>{{ findings|length }} temuan</strong>
+      <span>Skor akan dihitung ulang saat disimpan.</span>
+    </div>
+    <div class="sticky-buttons">
+      <button class="btn btn-ghost" type="submit" name="aksi" value="simpan">Simpan review</button>
+      <button class="btn btn-primary" type="submit" name="aksi" value="generate">Simpan &amp; buat lembar kerja</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

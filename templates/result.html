@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Lembar Kerja — {{ identity.opd or 'Renja OPD' }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="breadcrumb">
+    <a href="{{ url_for('index') }}">Beranda</a><span>/</span><a href="{{ url_for('review', job_id=job.id) }}">Review</a><span>/</span><span>Lembar kerja</span>
+  </div>
+  <div class="page-title-row">
+    <div>
+      <span class="eyebrow">Langkah 4 dari 4</span>
+      <h1>Lembar Kerja Asistensi</h1>
+      <p class="muted">{{ identity.opd or 'OPD belum teridentifikasi' }} · Tahun {{ identity.tahun or '—' }} · {{ job.files.renja.filename if job.files and job.files.renja else '' }}</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('review', job_id=job.id) }}">Kembali ke review</a>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('index') }}">Analisis baru</a>
+    </div>
+  </div>
+</div>
+
+{% if not job.reviewed %}
+  <div class="inline-alert warn wide">
+    <strong>Review belum disimpan.</strong>
+    <p>Skor yang tertera masih skor awal. Kembali ke review untuk menerima, mengoreksi, atau mengabaikan temuan sebelum mengunduh lembar kerja final.</p>
+  </div>
+{% endif %}
+
+<section class="result-hero card">
+  <div>
+    <span class="eyebrow">Hasil akhir</span>
+    <div class="result-score">
+      <strong>{{ score_final.score if score_final.score is defined else '—' }}</strong>
+      <span>/100</span>
+      <span class="badge {{ 'badge-ok' if score_final.score and score_final.score >= 75 else 'badge-warn' }}">{{ score_final.predikat or '—' }}</span>
+    </div>
+    <p>
+      Skor awal {{ score_initial.score if score_initial.score is defined else '—' }} menjadi
+      {{ score_final.score if score_final.score is defined else '—' }} setelah review.
+      {{ summary.active }} temuan masih aktif; {{ summary.resolved }} sudah dikoreksi/diabaikan.
+    </p>
+  </div>
+  <div class="download-grid">
+    <a class="download-card" href="{{ url_for('download', job_id=job.id, fmt='docx') }}">
+      <span class="download-icon">DOCX</span>
+      <span><strong>Lembar Kerja DOCX</strong><small>Matriks, temuan, rekomendasi, paraf</small></span>
+      <span class="download-arrow">Unduh</span>
+    </a>
+    <a class="download-card" href="{{ url_for('download', job_id=job.id, fmt='xlsx') }}">
+      <span class="download-icon excel">XLSX</span>
+      <span><strong>Lembar Kerja XLSX</strong><small>Sheet identitas, matriks, temuan, paraf</small></span>
+      <span class="download-arrow">Unduh</span>
+    </a>
+  </div>
+</section>
+
+<div class="metric-grid">
+  <div class="card metric"><span class="score-label">Program</span><strong>{{ doc.statistik.program if doc.statistik else 0 }}</strong></div>
+  <div class="card metric"><span class="score-label">Kegiatan</span><strong>{{ doc.statistik.kegiatan if doc.statistik else 0 }}</strong></div>
+  <div class="card metric"><span class="score-label">Subkegiatan</span><strong>{{ doc.statistik.subkegiatan if doc.statistik else 0 }}</strong></div>
+  <div class="card metric"><span class="score-label">Pagu indikatif</span><strong class="metric-money">{{ (doc.statistik.pagu if doc.statistik else 0)|rupiah }}</strong></div>
+</div>
+
+{% if warnings %}
+  <details class="card notice-card" {% if analysis.master and analysis.master.is_sample %}open{% endif %}>
+    <summary><strong>Catatan dan peringatan ({{ warnings|length }})</strong></summary>
+    <ul class="notice-list">
+      {% for warning in warnings %}<li>{{ warning }}</li>{% endfor %}
+    </ul>
+  </details>
+{% endif %}
+
+<section class="card section-card">
+  <div class="card-head">
+    <div><span class="eyebrow">Ringkasan</span><h2>Narasi hasil asistensi</h2></div>
+  </div>
+  <p class="narrative">{{ analysis.narrative.ringkasan or 'Ringkasan belum tersedia.' }}</p>
+  {% if analysis.narrative.kesimpulan %}
+    <div class="callout">
+      <strong>Kesimpulan</strong>
+      <p>{{ analysis.narrative.kesimpulan }}</p>
+    </div>
+  {% endif %}
+  {% if analysis.narrative.rekomendasi_umum %}
+    <h3>Rekomendasi umum</h3>
+    <ol class="recommendation-list">
+      {% for recommendation in analysis.narrative.rekomendasi_umum %}<li>{{ recommendation }}</li>{% endfor %}
+    </ol>
+  {% endif %}
+</section>
+
+<section class="card section-card">
+  <div class="card-head">
+    <div><span class="eyebrow">Penyelarasan</span><h2>RKPD, Renstra, dan RPJMD</h2></div>
+  </div>
+  {% if alignment %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Dokumen acuan</th><th>Status</th><th>Diperiksa</th><th>Selaras</th><th>Belum</th><th>Catatan</th></tr></thead>
+        <tbody>
+          {% for item in alignment %}
+            <tr>
+              <td><strong>{{ item.acuan }}</strong><br><small>{{ item.nama_file }}</small></td>
+              <td><span class="badge {{ 'badge-ok' if item.status == 'Selaras' else 'badge-warn' if item.status in ['Selaras Sebagian', 'Belum Selaras'] else 'badge-soft' }}">{{ item.status }}</span></td>
+              <td class="num">{{ item.jumlah_diperiksa }}</td>
+              <td class="num">{{ item.jumlah_selaras }}</td>
+              <td class="num">{{ item.jumlah_belum }}</td>
+              <td>{{ item.catatan }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="muted">Belum ada dokumen acuan yang diunggah. Penyelarasan belum diperiksa.</p>
+  {% endif %}
+</section>
+
+<section class="card section-card">
+  <div class="card-head">
+    <div><span class="eyebrow">Temuan</span><h2>Status keputusan review</h2></div>
+    <div class="count-row">
+      <span class="severity-chip kritis">Kritis <b>{{ summary.by_severity.Kritis }}</b></span>
+      <span class="severity-chip sedang">Sedang <b>{{ summary.by_severity.Sedang }}</b></span>
+      <span class="severity-chip saran">Saran <b>{{ summary.by_severity.Saran }}</b></span>
+    </div>
+  </div>
+  {% if findings %}
+    <div class="table-wrap">
+      <table class="data-table compact-table">
+        <thead><tr><th>No</th><th>Tingkat</th><th>Kode / Nama</th><th>Temuan</th><th>Status</th><th>Catatan</th></tr></thead>
+        <tbody>
+          {% for finding in findings %}
+            <tr>
+              <td class="num">{{ loop.index }}</td>
+              <td><span class="badge badge-{{ finding.tingkat|lower }}">{{ finding.tingkat }}</span></td>
+              <td><strong>{{ finding.kode or '-' }}</strong><br><small>{{ finding.nama }}</small></td>
+              <td>{{ finding.pesan }}</td>
+              <td><span class="badge {{ 'badge-ok' if finding.status in ['Dikoreksi', 'Diabaikan'] else 'badge-warn' }}">{{ finding.status }}</span></td>
+              <td>{{ finding.catatan or '—' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="muted">Tidak ada temuan.</p>
+  {% endif %}
+</section>
+
+<div class="end-actions">
+  <a class="btn btn-primary" href="{{ url_for('download', job_id=job.id, fmt='docx') }}">Unduh DOCX</a>
+  <a class="btn btn-secondary" href="{{ url_for('download', job_id=job.id, fmt='xlsx') }}">Unduh XLSX</a>
+  <form method="post" action="{{ url_for('delete_job', job_id=job.id) }}" data-confirm="Hapus seluruh data pekerjaan ini?">
+    <button class="btn btn-danger btn-ghost" type="submit">Hapus pekerjaan</button>
+  </form>
+</div>
+{% endblock %}
